@@ -1,0 +1,121 @@
+<!DOCTYPE html>  <html lang="id">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width,initial-scale=1">  
+<meta name="theme-color" content="#0b1b3d">  
+<title>Biwote Digital Dice - Online Dice Roller</title>  
+<meta name="description" content="Free online digital dice roller. Roll 1 to 6 virtual dice, enjoy animations, automatic totals and roll history. Free, mobile-friendly and offline-ready.">  
+<style>  
+*{box-sizing:border-box}  
+body{margin:0;background:radial-gradient(circle at top,#193c6c,#08152f 75%);color:#fff;font-family:Arial,sans-serif;min-height:100vh;padding:25px 15px}  
+main{max-width:480px;margin:auto}  
+header{text-align:center;color:#ffd45a;font-weight:bold;font-size:22px}  
+h1{text-align:center;font-size:38px;margin:35px 0 8px}  
+p{text-align:center;color:#b8c6dd}  
+.panel{background:#102448;border:1px solid #29436d;border-radius:22px;padding:22px;margin-top:25px}  
+.controls{text-align:center;margin-bottom:25px}  
+button{cursor:pointer}  
+.count{background:#0b1b3d;color:white;border:1px solid #456080;border-radius:10px;padding:10px 13px;margin:3px}  
+.count.active{background:#ffd45a;color:#142342}  
+.dice{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;min-height:120px;align-items:center}  
+.die{width:82px;height:82px;background:linear-gradient(145deg,#fff,#cbd9ef);border-radius:18px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:13px;box-shadow:0 8px 20px #0006}  
+.pip{width:12px;height:12px;border-radius:50%;background:#142b50;align-self:center;justify-self:center}  
+.hidden{visibility:hidden}  
+.rolling{animation:roll .6s}  
+@keyframes roll{to{transform:rotate(720deg) scale(.9)}}  
+.total{text-align:center;margin:25px}  
+.total small{display:block;color:#b8c6dd}  
+.total strong{font-size:42px;color:#ffd45a}  
+#roll{width:100%;padding:17px;background:#ffd45a;border:0;border-radius:14px;font-size:17px;font-weight:bold;color:#142342}  
+.links{text-align:center;margin-top:20px}  
+.links button{background:none;border:0;color:#b8c6dd;text-decoration:underline;margin:5px}  
+h3{font-size:15px}  
+#history{color:#b8c6dd;font-size:13px;line-height:2}  
+footer{text-align:center;color:#8294b1;font-size:12px;margin-top:25px}  
+</style>  
+</head>  
+<body>  
+<main>  
+<header>biwote.</header>  
+<h1>Digital Dice</h1>  
+<p>Roll the dice. Let luck decide!</p>  
+<section class="panel">  
+<div class="controls">  
+<div style="margin-bottom:10px">Jumlah dadu</div>  
+<div id="choices"></div>  
+</div>  
+<div class="dice" id="dice"></div>  
+<div class="total"><small>TOTAL ANGKA</small><strong id="total">—</strong></div>  
+<button id="roll">🎲 LEMPAR DADU</button>  
+<div class="links">  
+<button id="sound">Suara: Mati</button>  
+<button id="reset">Reset</button>  
+</div>  
+<h3>Riwayat Lemparan</h3>  
+<div id="history">Belum ada lemparan.</div>  
+</section>  
+<footer>Free Digital Tool • Biwote</footer>  
+</main>  
+<script>  
+let count=1,history=[],sound=false;  
+const faces={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};  
+const dice=document.getElementById('dice');  
+function choices(){  
+ document.getElementById('choices').innerHTML='';  
+ for(let i=1;i<=6;i++){  
+ let b=document.createElement('button');  
+ b.className='count'+(i===count?' active':'');  
+ b.textContent=i;  
+ b.onclick=()=>{count=i;choices()};  
+ document.getElementById('choices').append(b);  
+ }  
+}  
+function draw(v,animate=false){  
+ let d=document.createElement('div');  
+ d.className='die'+(animate?' rolling':'');  
+ faces[v].forEach(()=>{});  
+ for(let i=0;i<9;i++){  
+ let p=document.createElement('span');  
+ p.className='pip'+(faces[v].includes(i)?'':' hidden');  
+ d.append(p);  
+ }  
+ return d;  
+}  
+function show(values,animate=false){  
+ dice.replaceChildren(...values.map(v=>draw(v,animate)));  
+}  
+function beep(){  
+ if(!sound)return;  
+ try{  
+ let c=new AudioContext(),o=c.createOscillator(),g=c.createGain();  
+ o.connect(g);g.connect(c.destination);  
+ o.frequency.value=520;g.gain.value=.05;  
+ o.start();o.stop(c.currentTime+.12);  
+ }catch(e){}  
+}  
+document.getElementById('roll').onclick=()=>{  
+ let values=Array.from({length:count},()=>1+Math.floor(Math.random()*6));  
+ show(values,true);beep();  
+ setTimeout(()=>{  
+ show(values);  
+ let sum=values.reduce((a,b)=>a+b,0);  
+ document.getElementById('total').textContent=sum;  
+ history.unshift(values);  
+ history=history.slice(0,8);  
+ document.getElementById('history').innerHTML=history.map(v=>'<div>'+v.join(' + ')+' = <b>'+v.reduce((a,b)=>a+b,0)+'</b></div>').join('');  
+ beep();  
+ },600);  
+};  
+document.getElementById('sound').onclick=()=>{  
+ sound=!sound;  
+ document.getElementById('sound').textContent='Suara: '+(sound?'Nyala':'Mati');  
+};  
+document.getElementById('reset').onclick=()=>{  
+ history=[];show([1]);  
+ document.getElementById('total').textContent='—';  
+ document.getElementById('history').textContent='Belum ada lemparan.';  
+};  
+choices();show([1]);  
+</script>  
+</body>  
+</html>  
